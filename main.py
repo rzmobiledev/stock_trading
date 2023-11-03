@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 import requests
 import smtplib
+import html
 
 load_dotenv()
 
@@ -12,11 +13,16 @@ def send_email(to_addr: str, article_lists: list):
     smtp = "smtp.gmail.com"
     password = os.environ.get("GMAIL_API_KEY")
 
-    with smtplib.SMTP(host="smtp.gmail.com", port=port) as connect:
-        connect.starttls()
-        connect.login(user=user, password=password)
-        connect.sendmail(from_addr=user, to_addrs=to_addr, msg=f"Subject:New Stock Headline Update\n\n{article_lists}")
-        print("email sent successfully")
+    change_ascii_char = "\u2019"
+
+    for article in article_lists:
+
+        article.replace(change_ascii_char, "-")
+        with smtplib.SMTP(host=smtp, port=port) as connect:
+            connect.starttls()
+            connect.login(user=user, password=password)
+            connect.sendmail(from_addr=user, to_addrs=to_addr, msg=f"Subject:New Stock Headline Update\n\n{html.unescape(article)}")
+            print("email sent successfully")
 
 
 STOCK_NAME = "TSLA"
@@ -70,7 +76,7 @@ if diff_percent > 5:
     # 7. - Create a new list of the first 3 article's headline and description using list comprehension
     formated_articles = [f"headline: {article['title']}. \nBrief: {article['description']}" for article in three_articles]
     # TODO 8. - Send each article as a separate message via twilio
-    # send_email("rizal.safril@gmail.com", article_lists=formated_articles)
+    send_email("rizal.safril@gmail.com", article_lists=formated_articles)
 
 
 
